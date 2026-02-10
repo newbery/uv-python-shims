@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+# -----------------------------------------------------------------------------
+# uv python shim
+#
+# - Mimics the pyenv python shim behavior.
+# - Uses `uv python find` for discovery (including .python-version handling).
+# - If invoked as python3.X, enforces major.minor = 3.X by re-finding with 3.X.
+# - If a suitable python cannot be found, this will fail with an error message.
+# -----------------------------------------------------------------------------
+
+set -euo pipefail
+
+py=""
+FLAGS=(--resolve-links)
+
+# Uncomment to force uv-managed pythons only
+# FLAGS+=(--managed-python)
+
+# Pop shim dir out of PATH to avoid recursion
+shim_dir="$(cd "$(dirname "$0")" && pwd)"
+path=""
+IFS=':' read -r -a parts <<< "${PATH:-}"
+for p in "${parts[@]}"; do
+  [[ -z "$p" ]] && continue
+  [[ "$p" == "$shim_dir" ]] && continue
+  path="${path:+$path:}$p"
+done
+
+uv_find() {
+  PATH="$path" uv python find "${FLAGS[@]}" "$@"
+}
+
+uv_find_version() {
+  PATH="$path" uv python find --show-version "${FLAGS[@]}"
+}
+
+major_minor() {
+  local v="$1"
+  IFS='.' read -r a b _rest <<< "$v"
+  printf '%s.%s\n' "$a" "$b"
+}
+
+# Extract a major.minor override from the shim name:
+#   python3.11   -> 3.11
+#   python3.11.2 -> 3.11
+shim_prefix=""
+self="$(basename "$0")"
+if [[ "$self" =~ ^python3\.([0-9]+)(\.([0-9]+))?$ ]]; then
+  shim_prefix="3.${BASH_REMATCH[1]}"
+fi
+
+# If this is a python 3.X shim, the resulting python should match
+# shim prefix so let's first compare the version prefixes.
+if [[ -n "$shim_prefix" ]]; then
+  found_prefix=""
+  found_version="$(uv_find_version 2>/dev/null || true)"
+  if [[ -n "$found_version" ]]; then
+    found_prefix="$(major_minor "$found_version")"
+  fi
+
+  # If not a match, let's defer to the result using the shim prefix
+  if [[ "$found_prefix" != "$shim_prefix" ]]; then
+    py="$(uv_find "$shim_prefix")"
+    # echo "Using python $shim_prefix instead of the default 'uv python find' result"
+  fi
+fi
+
+# Otherwise, the default `uv python find` result is good enough.
+if [[ -z "$py" ]]; then
+  py="$(uv_find)"
+fi
+
+exec env PATH="$path" "$py" "$@"

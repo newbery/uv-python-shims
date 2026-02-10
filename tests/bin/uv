@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+log_file="${UV_MOCK_LOG:?UV_MOCK_LOG not set}"
+
+# Ensure recursion protection: when uv runs, shim dir MUST NOT be on PATH.
+if [[ -n "${SHIM_DIR:-}" ]]; then
+  case ":${PATH}:" in
+    *":${SHIM_DIR}:"*)
+      echo "uv-mock: PATH contains SHIM_DIR (${SHIM_DIR})" >&2
+      exit 77
+      ;;
+  esac
+fi
+
+echo "uv $*" >> "$log_file"
+
+# Expected forms:
+#   uv python find [--show-version] [--resolve-links] [<spec>]
+if [[ "${1:-}" != "python" || "${2:-}" != "find" ]]; then
+  echo "uv-mock: unexpected subcommand: $*" >&2
+  exit 2
+fi
+
+shift 2
+
+show_version=0
+spec=""
+for arg in "$@"; do
+  case "$arg" in
+    --show-version) show_version=1 ;;
+    --resolve-links) : ;;
+    --managed-python) : ;;
+    --no-python-downloads) : ;;
+    *)
+      if [[ -z "$spec" && "$arg" != --* ]]; then
+        spec="$arg"
+      fi
+      ;;
+  esac
+done
+
+key_suffix=""
+if [[ -n "$spec" ]]; then
+  key_suffix="_${spec//./_}"
+fi
+
+if (( show_version )); then
+  var="UV_FIND_VERSION${key_suffix}"
+  val="${!var:-}"
+  if [[ -z "$val" ]]; then
+    echo "uv-mock: no version for spec '$spec'" >&2
+    exit 1
+  fi
+  echo "$val"
+else
+  var="UV_FIND_PATH${key_suffix}"
+  val="${!var:-}"
+  if [[ -z "$val" ]]; then
+    echo "uv-mock: no path for spec '$spec'" >&2
+    exit 1
+  fi
+  echo "$val"
+fi
