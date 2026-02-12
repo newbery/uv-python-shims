@@ -74,19 +74,12 @@ fi
 
 info "Create main shim"
 run_step "Create directory ${DEST_DIR}" mkdir -p "${DEST_DIR}"
-
-if command -v install >/dev/null 2>&1; then
-  run_step "Copy shim to ${DEST_SHIM} (mode 0755)" install -m 0755 "${SRC_SHIM}" "${DEST_SHIM}"
-else
-  warn "'install' not found; using cp + chmod"
-  run_step "Copy shim to ${DEST_SHIM}" cp "${SRC_SHIM}" "${DEST_SHIM}"
-  run_step "Set executable bit on ${DEST_SHIM}" chmod 0755 "${DEST_SHIM}"
-fi
-
+run_step "Copy shim to ${DEST_SHIM}" cp "${SRC_SHIM}" "${DEST_SHIM}"
+run_step "Set executable bit on ${DEST_SHIM}" chmod 0755 "${DEST_SHIM}"
 printf "\n"
+
 info "Create symlinks"
 run_step "Link ${DEST_DIR}/python3 -> python" ln -sfn "python" "${DEST_DIR}/python3"
-
 for minor in ${MINOR_VERSIONS}; do
   run_step "Link ${DEST_DIR}/python3.${minor} -> python" ln -sfn "python" "${DEST_DIR}/python3.${minor}"
 done

@@ -10,19 +10,19 @@ to a uv-managed python consistent with your project’s `.python-version`
 
 This project provides:
 
-* `python` — a shim script that intercepts `python`/`python3.*` invocations
+- `python` — a shim script that intercepts `python`/`python3.*` invocations
   and resolves an appropriate interpreter using `uv python find`.
-* `install.bash` — an installer that copies the shim to `~/.local/uv-python-shims/`
+- `install.bash` — an installer that copies the shim to `~/.local/uv-python-shims/`
   and creates symlinks for `python3` and a set of `python3.X` names.
-* `tests/` — a lightweight bash test harness with mock `uv` + mock “python”
+- `tests/` — a lightweight bash test harness with mock `uv` + mock “python”
   executables.
 
 References:
 
-* `pyenv`  
+- `pyenv`  
   https://github.com/pyenv/pyenv
 
-* `uv python find`  
+- `uv python find`  
   https://docs.astral.sh/uv/concepts/python-versions/#finding-a-python-executable
 
 
@@ -30,22 +30,36 @@ References:
 
 **Requires:** `bash` and `uv` installed and on your `PATH`
 
-* Runs `uv python find` to locate the best Python interpreter for the current
-  working directory (uv walks upward looking for project metadata, including
-  `.python-version`).
+The shim runs `uv python find` to locate the best Python interpreter for the current
+working directory:
+  
+  * The find operation first looks for any python version constraints defined
+    within a `.python-version` file or a project/workspace `pyproject.toml` file
+    within the current directory or any parent directories.
 
-* If the shim is invoked via a symlink with a versioned name like `python3.10`
-  or `python3.14`, it enforces that **major.minor**:
+  * It then searches the following locations **in order** until it finds the
+    first available python that satisfies the version constraints (or the first
+    one found if there are no constraints):
+    1. Closest non-activated virtual environment (activated environments bypass
+       the shim entirely so they are always selected with no version constraints).
+    2. UV-managed python installations in order from newest to oldest versions.
+    3. The first suitable python found on the `PATH`.
 
-  * It checks what `uv` would pick by default.
-  * If the resolved interpreter does not match the requested `3.X`, it reruns
-    `uv python find 3.X` and uses that interpreter instead.
+  * If a suitable python is found, that python is executed via its absolute path.
+    If a suitable python can NOT be found, the script will exit and display the
+    error message given by uv.
 
-* Avoids recursion:
+If the shim is invoked via a symlink with a versioned name like `python3.10`
+or `python3.14`, it enforces that **major.minor**. It does this by first checking
+what `uv` would pick by default and if the resolved interpreter does not match
+the requested `3.X`, it reruns `uv python find 3.X` and uses that interpreter instead.
 
-  * Removes the shim directory from `PATH` when invoking `uv` so `uv` won’t
-    discover and re-run the shim as a candidate interpreter.
-  * Executes the resolved interpreter via an absolute path.
+When invoking `uv` and executing the resolved python interpreter, the shim avoids
+recursion by removing the shim directory from `PATH`.
+
+There are a number of possible configuration flags that can modify the behavior
+of `uv python find`. See the commented-out section near the top of the shim script
+and uncomment the flags desired to control python discovery.
 
 
 ## Install main shim and symlinks
@@ -72,8 +86,8 @@ export PATH="$HOME/.local/uv-python-shims:$PATH"
 
 Common locations:
 
-* bash: `~/.bashrc` (and/or `~/.bash_profile`)
-* zsh: `~/.zshrc`
+- bash: `~/.bashrc` (and/or `~/.bash_profile`)
+- zsh: `~/.zshrc`
 
 Then restart your shell, or run the export line once in your current session.
 
@@ -86,12 +100,22 @@ python --version
 python3.11 --version
 ```
 
-If you have a `.python-version` in a directory, try running from inside it and
-from a subdirectory to confirm uv project discovery behaves as expected.
+If you have a `.python-version` in a directory, try running from inside that
+directory and from a subdirectory to confirm ***.python-version discovery***
+behaves as expected.
+
+If you have a project or workspace defined with a `pyproject.toml` that includes
+a `requires-python` field, try running within that project directory or from a
+subdirectory to confirm ***project/workspace discovery*** behaves as expected.
+
+If you have a non-activated virtual environment installed in a `.venv` subdirectory
+of a project, try running within the project directory or a subdirectory of that
+project to confirm ***virtual environment discovery*** behaves as expected.
+
 
 ### Installer knobs
 
-You can override the install destination or UI pacing:
+You can override the install destination or pacing:
 
 ```bash
 DEST_DIR="$HOME/.local/uv-python-shims" bash ./install.bash
@@ -112,9 +136,9 @@ The tests are written in bash and do **not** require a real `uv` install.
 
 They work by:
 
-* copying the shim under test into a temp directory
-* placing mock stubs on `PATH` (`tests/bin/uv`, plus fake interpreters)
-* asserting calls/behavior via logs and captured output
+- copying the shim under test into a temp directory
+- placing mock stubs on `PATH` (`tests/bin/uv`, plus fake interpreters)
+- asserting calls/behavior via logs and captured output
 
 From the project root:
 
@@ -162,14 +186,23 @@ python version switching to be less coupled from project management.
 
 ## Notes and caveats
 
-* This shim delegates nearly all “what Python should I use?” logic to `uv`.
+- **Caution:** `uv-python-shim` should NOT be used as a solution for auto-activating
+  a project's virtual environment. It's not suitable for that task. This shim will
+  only auto-discover the environment's python interpreter and will not directly
+  expose any other executables within that environment. Either manually activate
+  using the mechanism recommended for your environment manager, or possibly auto-activate
+  the environment with a solution like `direnv` or `mise`.
+
+- This shim delegates nearly all “what Python should I use?” logic to `uv`.
   If `uv` changes discovery rules or output formats, the shim may need tweaks.
 
-* The `python3.X` behavior is intentionally “major.minor enforcement” (not micro/patch).
+- The `python3.X` behavior is intentionally “major.minor enforcement” (not micro/patch).
 
-* If you also want shims for other tools (`pip`, `pytest`, etc.), it should be
+- If you also want shims for other tools (`pip`, `pytest`, etc.), it should be
   straightforward to add siblings that run `"$resolved_python" -m pip ...` or similar.
-  I don't need this so I didn't bother adding it.
+  I don't need this so I didn't bother adding it. Also check the "Caution"
+  note above. If you need more than just a python shim, you probably would do better
+  with a different solution.
 
 ## License
 
