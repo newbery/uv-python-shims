@@ -158,7 +158,7 @@ I appreciate the convenience of managing which pythons to use depending on
 directory context and not locking myself into using 'uv' python invocation
 semantics everywhere I need this. It's also a bit of a drag to explain why
 I'm using 'uv' commands in a non-uv context when I'm collaborating with some
-collegues on a non-uv managed project.
+colleagues on a non-uv managed project.
 
 Keeping python version management conceptually separate from project and
 virtualenv management is also a core good practice that I try to promote in
