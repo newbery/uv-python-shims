@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 # -----------------------------------------------------------------------------
-# install.bash
+# install.bash -- v1.0.0
+# https://github.com/newbery/uv-python-shims
 #
 # Copies the project-root ./python shim to:
 #   ~/.local/uv-python-shims/python

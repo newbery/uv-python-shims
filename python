@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 # -----------------------------------------------------------------------------
-# uv python shim
+# uv python shim -- v1.0.0
+# https://github.com/newbery/uv-python-shims
 #
 # - Mimics the pyenv python shim behavior.
 # - Uses `uv python find` for discovery (including .python-version handling).
