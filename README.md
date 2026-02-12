@@ -33,21 +33,21 @@ References:
 The shim runs `uv python find` to locate the best Python interpreter for the current
 working directory:
   
-  * The find operation first looks for any python version constraints defined
-    within a `.python-version` file or a project/workspace `pyproject.toml` file
-    within the current directory or any parent directories.
+- The find operation first looks for any python version constraints defined
+  within a `.python-version` file or a project/workspace `pyproject.toml` file
+  within the current directory or any parent directories.
 
-  * It then searches the following locations **in order** until it finds the
-    first available python that satisfies the version constraints (or the first
-    one found if there are no constraints):
-    1. Closest non-activated virtual environment (activated environments bypass
-       the shim entirely so they are always selected with no version constraints).
-    2. UV-managed python installations in order from newest to oldest versions.
-    3. The first suitable python found on the `PATH`.
+- It then searches the following locations **in order** until it finds the
+  first available python that satisfies the version constraints (or the first
+  one found if there are no constraints):
+  1. Closest non-activated virtual environment (activated environments bypass
+     the shim entirely so they are always selected with no version constraints).
+  2. UV-managed python installations in order from newest to oldest versions.
+  3. The first suitable python found on the `PATH`.
 
-  * If a suitable python is found, that python is executed via its absolute path.
-    If a suitable python can NOT be found, the script will exit and display the
-    error message given by uv.
+- If a suitable python is found, that python is executed via its absolute path.
+  If a suitable python can NOT be found, the script will exit and display the
+  error message given by uv.
 
 If the shim is invoked via a symlink with a versioned name like `python3.10`
 or `python3.14`, it enforces that **major.minor**. It does this by first checking
@@ -186,7 +186,7 @@ python version switching to be less coupled from project management.
 
 ## Notes and caveats
 
-- **Caution:** `uv-python-shim` should NOT be used as a solution for auto-activating
+- **Caution:** `uv-python-shims` should NOT be used as a solution for auto-activating
   a project's virtual environment. It's not suitable for that task. This shim will
   only auto-discover the environment's python interpreter and will not directly
   expose any other executables within that environment. Either manually activate
