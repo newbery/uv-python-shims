@@ -91,6 +91,12 @@ Common locations:
 
 Then restart your shell, or run the export line once in your current session.
 
+**Windows PATH:** If you install this in a Windows environment with bash support
+(Git Bash / MSYS2 / Cygwin / WSL), be aware that the bash shell PATH update
+suggested above will affect bash sessions only. To use from PowerShell/cmd,
+you may also need to add the directory to Windows PATH.
+
+
 ### Verify result
 
 ```bash
@@ -115,7 +121,7 @@ project to confirm ***virtual environment discovery*** behaves as expected.
 
 ### Installer knobs
 
-You can override the install destination or pacing:
+You can override the install destination or installer pacing:
 
 ```bash
 DEST_DIR="$HOME/.local/uv-python-shims" bash ./install.bash
@@ -123,10 +129,23 @@ PAUSE=0 bash ./install.bash
 PAUSE=0.25 bash ./install.bash
 ```
 
-You can also change which `python3.X` links are created by setting `MINOR_VERSIONS`:
+You can also change which `python3.X` symlinks are created by setting `MINOR_VERSIONS`
+and instead of symlinks the installer can create copies or wrapper scripts:
 
 ```bash
 MINOR_VERSIONS="10 11 12" bash ./install.bash
+SHIM_MODE=copy bash ./install.bash
+SHIM_MODE=wrapper bash ./install.bash
+```
+
+Before installing the shims, the installer wipes the target directory. This is
+done to allow for easy updates and experimentation. There are guardrails to
+help prevent unintentional destructive wipes. If the target directory looks fishy
+or unexpected items are seen in the target directory, the script will exit
+with an error message. Set `UV_PYTHON_SHIMS_FORCE` to override the guardrails:
+
+```bash
+UV_PYTHON_SHIMS_FORCE=1 bash ./install.bash
 ```
 
 
