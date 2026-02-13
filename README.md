@@ -1,7 +1,7 @@
 
 # Project: uv python shims
 
-A small, pyenv-style shim layer for `python` that delegates interpreter
+A small, pyenv-like shim layer for `python` that delegates interpreter
 resolution to `uv`.
 
 The goal is to let you type `python`, `python3.11`, etc. and have it resolve
