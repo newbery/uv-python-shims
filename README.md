@@ -203,28 +203,67 @@ There are also alternative solutions possible using tools like
 python version switching to be less coupled from project management.
 
 
-## Does this work with 'uv', 'hatch', 'poetry', 'pipx', and 'pixi'?
+## Does this work with 'uv', 'hatch', 'poetry', 'pyenv', pixi', and 'pipx'?
 
 Many tools will "just work" as long as they select the python found from the current
 `PATH`. Some tools can be helped along to do this more consistently.
 
-- `uv` will by default attempt to use the python shim found from `PATH`.  
+- **uv:** In most cases, `uv` will by default either attempt to use the python
+  shim found from `PATH` or follow the same python discovery heuristic that the
+  shim uses.  
 
-- Set `HATCH_PYTHON=python` in your environment to tell `hatch` to default to
-  using the python shim found from `PATH`. 
+- **hatch:** Set `HATCH_PYTHON=python` in your environment to tell hatch to
+  default to using the python shim found from `PATH`. 
 
-- Set `poetry config virtualenvs.prefer-active-python true --global` to
-  configure poetry to default to using the python shim found from `PATH`.
+- **poetry:** Set `poetry config virtualenvs.prefer-active-python true --global`
+  to configure poetry to default to using the python shim found from `PATH`.
 
-- Add something like `export PIPX_DEFAULT_PYTHON="$(command -v python)` to your
-  shell startup file to tell `pipx` to default to using the python shim found
-  from `PATH`. Although, if you're using `uv` already, you might as well be
-  using `uv tool install` instead of `pipx`.
-
-- At this time, I know of no way to configure `pixi` to use a uv-managed python
+- **pyenv:** The `uv-python-shims` solution is meant to be a **replacement**
+  for `pyenv` shims. However, `uv` installs pre-built pythons while `pyenv`
+  builds pythons from source. Pre-built python installation is much faster than
+  building from source so they are preferred in most usecases. But if you still
+  wish to build from source, you can continue using `pyenv` for this purpose.
+  Just ensure that the `uv-python-shims` directory is found in the PATH **before**
+  the `pyenv` shims directory. The `uv python find` will then be able to discover
+  the pyenv-managed pythons as long as a suitable uv-managed python matching the
+  version constraints is not found first.
+  
+- **pixi:** At this time, I know of no way to configure `pixi` to use a uv-managed python
   or to default to using the python shim found from `PATH`. The `pixi` tool
-  manages pythons entirely within the pixi-managed virtual environment for
-  a `pixi` project similar to how `conda` works.
+  manages pythons entirely within the pixi-managed virtual environment similar
+  to how `conda` works.
+
+- **pipx:** By default, the python selection when using `pipx` is deterministic
+  and is not affected by the presence of `.python-version` files or virtual
+  environments. This makes sense since having all your pipx-installed tools use
+  different pythons can be surprising and difficult to manage. If despite this,
+  you still want to use the dynamic python discovery made possible with these
+  uv-python-shims, you can add something like the following to your shell
+  startup file.
+  ```
+  export PIPX_DEFAULT_PYTHON="$(command -v python)
+  ```
+  
+- **uv tool:** UV's equivalent to `pipx install` is `uv tool install`.
+  Both install globally-accessible python-based tools in isolated virtual
+  environments but there is a subtle difference between how the two select
+  the python version installed in that environment. The `uv tool` mechanism
+  appears to follow the same discovery heuristic as the rest of `uv` although
+  it ignores version constraints defined in "local" configuration
+  (local `.python-version` files or project/workspace `pyproject.toml` files).
+  However the presence of an activated virtual environment or the existence
+  of a non-activated virtual environment found in the current directory or
+  parents may result in the selection of the python from that environment.
+  This feels like a possible footgun if you expect the more deterministic
+  behavior followed by `pipx`. To get the more deterministic pipx-like behavior,
+  you can set `UV_PYTHON` environment variable to point to the desired default
+  python path. UV_PYTHON can be either a version constraint or a path to a python
+  executable. However this will set the default python for all `uv` operations
+  which is likely undesirable. An alternative is just to define a special
+  alias/function within your shell startup file just for `uv tool install`:
+  ```
+  uv-tool-install() { UV_PYTHON=[...] uv tool install "$@" }
+  ```
 
 
 ## Notes and caveats
