@@ -241,7 +241,7 @@ Many tools will "just work" as long as they select the python found from the cur
   uv-python-shims, you can add something like the following to your shell
   startup file.
   ```
-  export PIPX_DEFAULT_PYTHON="$(command -v python)
+  export PIPX_DEFAULT_PYTHON="$(command -v python)"
   ```
   
 - **uv tool:** UV's equivalent to `pipx install` is `uv tool install`.
