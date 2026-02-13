@@ -203,6 +203,30 @@ There are also alternative solutions possible using tools like
 python version switching to be less coupled from project management.
 
 
+## Does this work with 'uv', 'hatch', 'poetry', 'pipx', and 'pixi'?
+
+Many tools will "just work" as long as they select the python found from the current
+`PATH`. Some tools can be helped along to do this more consistently.
+
+- `uv` will by default attempt to use the python shim found from `PATH`.  
+
+- Set `HATCH_PYTHON=python` in your environment to tell `hatch` to default to
+  using the python shim found from `PATH`. 
+
+- Set `poetry config virtualenvs.prefer-active-python true --global` to
+  configure poetry to default to using the python shim found from `PATH`.
+
+- Add something like `export PIPX_DEFAULT_PYTHON="$(command -v python)` to your
+  shell startup file to tell `pipx` to default to using the python shim found
+  from `PATH`. Although, if you're using `uv` already, you might as well be
+  using `uv tool install` instead of `pipx`.
+
+- At this time, I know of no way to configure `pixi` to use a uv-managed python
+  or to default to using the python shim found from `PATH`. The `pixi` tool
+  manages pythons entirely within the pixi-managed virtual environment for
+  a `pixi` project similar to how `conda` works.
+
+
 ## Notes and caveats
 
 - **Caution:** `uv-python-shims` should NOT be used as a solution for auto-activating
