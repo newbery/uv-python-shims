@@ -1,12 +1,25 @@
 
 # Project: uv python shims
 
+-> [What is this?](#what-is-this)  
+-> [How does this work?](#how-does-this-work)  
+-> [How to install this?](#how-to-install-this)  
+-> [How to run tests](#how-to-run-tests)  
+-> [Why did I make this?](#why-did-i-make-this)  
+-> [Does this work with ...?](#does-this-work-with-uv-hatch-poetry-pyenv-pixi-and-pipx)  
+-> [Notes and caveats](#notes-and-caveats)  
+
+## What is this?
+
 A small, pyenv-like shim layer for `python` that delegates interpreter
 resolution to `uv`.
 
+A "shim" in this context is a small script that intercepts the invocation of
+a python interpreter and then dispatches to some auto-discovered python path. 
 The goal is to let you type `python`, `python3.11`, etc. and have it resolve
-to a uv-managed python consistent with your project’s `.python-version` 
-(and/or uv’s project discovery), without needing pyenv.
+to the correct python path by using uv's python discovery rules. The result is
+very similar to the result from shims installed by `pyenv` but with greater
+visibility into more installed pythons (like the pythons installed by uv itself).
 
 This project provides:
 
@@ -26,7 +39,7 @@ References:
   https://docs.astral.sh/uv/concepts/python-versions/#finding-a-python-executable
 
 
-## The main shim (`./python`)
+## How does this work?
 
 **Requires:** `bash` and `uv` installed and on your `PATH`
 
@@ -46,7 +59,7 @@ working directory:
   3. The first suitable python found on the `PATH`.
 
 - If a suitable python is found, that python is executed via its absolute path.
-  If a suitable python can NOT be found, the script will exit and display the
+  If a suitable python is NOT found, the script will exit and display the
   error message given by uv.
 
 If the shim is invoked via a symlink with a versioned name like `python3.10`
@@ -62,7 +75,7 @@ of `uv python find`. See the commented-out section near the top of the shim scri
 and uncomment the flags desired to control python discovery.
 
 
-## Install main shim and symlinks
+## How to install this?
 
 **Requires:** `bash` (macOS default bash 3.2 is fine)
 
@@ -149,7 +162,7 @@ UV_PYTHON_SHIMS_FORCE=1 bash ./install.bash
 ```
 
 
-## Running tests
+## How to run tests?
 
 The tests are written in bash and do **not** require a real `uv` install.
 
@@ -285,6 +298,7 @@ Many tools will "just work" as long as they select the python found from the cur
   I don't need this so I didn't bother adding it. Also check the "Caution"
   note above. If you need more than just a python shim, you probably would do better
   with a different solution.
+
 
 ## License
 
